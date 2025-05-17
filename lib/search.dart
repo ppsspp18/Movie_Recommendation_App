@@ -1,0 +1,175 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+
+// Movie Model
+class Movie {
+  final int id;
+  final String title;
+  final String overview;
+  final double voteAverage;
+  final String genre;
+  final List<int> recommendations;
+  final List<int> languageRecommendations;
+
+  Movie({
+    required this.id,
+    required this.title,
+    required this.overview,
+    required this.voteAverage,
+    required this.genre,
+    required this.recommendations,
+    required this.languageRecommendations,
+  });
+
+  factory Movie.fromJson(Map<String, dynamic> json) {
+    List<int> extractIds(String prefix) {
+      return List<int>.generate(10, (i) {
+        final key = '$prefix${i + 1}';
+        return (json[key] ?? -1).toInt();
+      }).where((id) => id != -1).toList();
+    }
+
+    return Movie(
+      id: (json['id'] as num).toInt(),
+      title: json['title'],
+      overview: json['overview'],
+      voteAverage: (json['vote_average'] as num).toDouble(),
+      genre: json['genre'],
+      recommendations: extractIds('r'),
+      languageRecommendations: extractIds('rl'),
+    );
+  }
+}
+
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  late Future<List<Movie>> moviesFuture;
+  List<Movie> allMovies = [];
+  String searchQuery = '';
+  Set<int> expandedMovieIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    moviesFuture = loadMovies();
+  }
+
+  Future<List<Movie>> loadMovies() async {
+    final String response =
+    await DefaultAssetBundle.of(context).loadString('assets/movies.json');
+    final List<dynamic> data = json.decode(response);
+    final movies = data.map((json) => Movie.fromJson(json)).toList();
+    allMovies = movies;
+    return movies;
+  }
+
+  List<String> getMovieTitlesFromIds(List<int> ids) {
+    return ids
+        .map((id) => allMovies.firstWhere((m) => m.id == id, orElse: () => Movie(
+      id: -1,
+      title: 'Unknown',
+      overview: '',
+      voteAverage: 0,
+      genre: '',
+      recommendations: [],
+      languageRecommendations: [],
+    )).title)
+        .toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Search Movies")),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              onChanged: (query) => setState(() => searchQuery = query),
+              decoration: InputDecoration(
+                labelText: 'Search by title',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Movie>>(
+              future: moviesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (allMovies.isEmpty && snapshot.hasData) {
+                  allMovies = snapshot.data!;
+                }
+
+                final filteredMovies = searchQuery.isEmpty
+                    ? allMovies
+                    : allMovies
+                    .where((movie) =>
+                    movie.title.toLowerCase().contains(searchQuery.toLowerCase()))
+                    .toList();
+
+                final displayedMovies = filteredMovies.take(50).toList();
+
+                if (displayedMovies.isEmpty) {
+                  return const Center(child: Text('No movies found.'));
+                }
+
+                return ListView.builder(
+                  itemCount: displayedMovies.length,
+                  itemBuilder: (context, index) {
+                    final movie = displayedMovies[index];
+                    final isExpanded = expandedMovieIds.contains(movie.id);
+
+                    final recommendedTitles = getMovieTitlesFromIds(movie.recommendations);
+                    final languageRecommendedTitles = getMovieTitlesFromIds(movie.languageRecommendations);
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: ListTile(
+                        title: Text(movie.title),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("⭐ ${movie.voteAverage} • 🎬 ${movie.genre}"),
+                            if (isExpanded) ...[
+                              const SizedBox(height: 8),
+                              Text(movie.overview),
+                              const SizedBox(height: 8),
+                              const Text("🔁 Recommended:", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ...recommendedTitles.map((title) => Text("• $title")),
+                              const SizedBox(height: 6),
+                              const Text("🌐 Recommended by Language:", style: TextStyle(fontWeight: FontWeight.bold)),
+                              ...languageRecommendedTitles.map((title) => Text("• $title")),
+                            ]
+                          ],
+                        ),
+                        onTap: () {
+                          setState(() {
+                            isExpanded
+                                ? expandedMovieIds.remove(movie.id)
+                                : expandedMovieIds.add(movie.id);
+                          });
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
