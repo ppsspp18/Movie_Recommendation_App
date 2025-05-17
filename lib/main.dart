@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:movie_recommender_app/search.dart';
+import 'package:movie_recommender_app/watchlist.dart';
+import 'package:movie_recommender_app/liked.dart';
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -58,10 +61,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async{
+                final movies = await DefaultAssetBundle.of(context)
+                    .loadString('assets/movies.json');
+                final data = json.decode(movies);
+                final movieList =
+                (data as List).map((json) => Movie.fromJson(json)).toList();
+
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const SearchScreen()),
+                  MaterialPageRoute(
+                    builder: (_) => WatchlistScreen(allMovies: movieList),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -71,12 +82,24 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 10),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async{
+                final movies = await DefaultAssetBundle.of(context)
+                    .loadString('assets/movies.json');
+                final data = json.decode(movies);
+                final movieList =
+                (data as List).map((json) => Movie.fromJson(json)).toList();
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LikedScreen(allMovies: movieList),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                   fixedSize: Size(50, 100)
               ),
-              child: Text('Watched Movies', style: TextStyle(color: Colors.deepOrange)),
+              child: Text('Liked Movies', style: TextStyle(color: Colors.deepOrange)),
             ),
           ],
         ),

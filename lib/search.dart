@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 // Movie Model
 class Movie {
@@ -53,11 +55,46 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Movie> allMovies = [];
   String searchQuery = '';
   Set<int> expandedMovieIds = {};
+  Set<int> watchlist = {};
+  Set<int> likedlist = {};
 
   @override
   void initState() {
     super.initState();
     moviesFuture = loadMovies();
+    loadWatchlist();
+    loadLikedlist();
+  }
+
+  Future<void> loadWatchlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList('watchlist') ?? [];
+    setState(() {
+      watchlist = ids.map(int.parse).toSet();
+    });
+  }
+
+  Future<void> saveWatchlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'watchlist',
+      watchlist.map((id) => id.toString()).toList(),
+    );
+  }
+  Future<void> loadLikedlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ids = prefs.getStringList('likedlist') ?? [];
+    setState(() {
+      watchlist = ids.map(int.parse).toSet();
+    });
+  }
+
+  Future<void> saveLikedlist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'likedlist',
+      watchlist.map((id) => id.toString()).toList(),
+    );
   }
 
   Future<List<Movie>> loadMovies() async {
@@ -71,16 +108,25 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<String> getMovieTitlesFromIds(List<int> ids) {
     return ids
-        .map((id) => allMovies.firstWhere((m) => m.id == id, orElse: () => Movie(
-      id: -1,
-      title: 'Unknown',
-      overview: '',
-      voteAverage: 0,
-      genre: '',
-      recommendations: [],
-      languageRecommendations: [],
-    )).title)
+        .map((id) => allMovies.firstWhere(
+          (m) => m.id == id,
+      orElse: () => Movie(
+        id: -1,
+        title: 'Unknown',
+        overview: '',
+        voteAverage: 0,
+        genre: '',
+        recommendations: [],
+        languageRecommendations: [],
+      ),
+    ).title)
         .toList();
+  }
+
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
   }
 
   @override
@@ -96,7 +142,9 @@ class _SearchScreenState extends State<SearchScreen> {
               decoration: InputDecoration(
                 labelText: 'Search by title',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),
@@ -115,8 +163,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 final filteredMovies = searchQuery.isEmpty
                     ? allMovies
                     : allMovies
-                    .where((movie) =>
-                    movie.title.toLowerCase().contains(searchQuery.toLowerCase()))
+                    .where((movie) => movie.title
+                    .toLowerCase()
+                    .contains(searchQuery.toLowerCase()))
                     .toList();
 
                 final displayedMovies = filteredMovies.take(50).toList();
@@ -131,11 +180,18 @@ class _SearchScreenState extends State<SearchScreen> {
                     final movie = displayedMovies[index];
                     final isExpanded = expandedMovieIds.contains(movie.id);
 
-                    final recommendedTitles = getMovieTitlesFromIds(movie.recommendations);
-                    final languageRecommendedTitles = getMovieTitlesFromIds(movie.languageRecommendations);
+                    final recommendedTitles =
+                    getMovieTitlesFromIds(movie.recommendations);
+                    final recommendedIds = movie.recommendations;
+
+                    final languageRecommendedTitles =
+                    getMovieTitlesFromIds(movie.languageRecommendations);
+                    final languageRecommendedIds =
+                        movie.languageRecommendations;
 
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
                       child: ListTile(
                         title: Text(movie.title),
                         subtitle: Column(
@@ -146,11 +202,76 @@ class _SearchScreenState extends State<SearchScreen> {
                               const SizedBox(height: 8),
                               Text(movie.overview),
                               const SizedBox(height: 8),
-                              const Text("🔁 Recommended:", style: TextStyle(fontWeight: FontWeight.bold)),
-                              ...recommendedTitles.map((title) => Text("• $title")),
+                              const Text("🔁 Recommended:",
+                                  style:
+                                  TextStyle(fontWeight: FontWeight.bold)),
+                              ...List.generate(recommendedTitles.length, (i) {
+                                final id = recommendedIds[i];
+                                final title = recommendedTitles[i];
+                                return Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(child: Text("• $title")),
+                                    IconButton(
+                                      icon: const Icon(Icons.playlist_add),
+                                      tooltip: 'Add to Watchlist',
+                                      onPressed: () {
+                                        setState(() => watchlist.add(id));
+                                        saveWatchlist();
+                                        showSnackBar(
+                                            "Added '$title' to Watchlist");
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.thumb_up),
+                                      tooltip: 'Like',
+                                      onPressed: () {
+                                        setState(() => likedlist.add(id));
+                                        saveLikedlist();
+                                        showSnackBar(
+                                            "Added '$title' to Liked Movies");
+                                      },
+                                    ),
+                                  ],
+                                );
+                              }),
                               const SizedBox(height: 6),
-                              const Text("🌐 Recommended by Language:", style: TextStyle(fontWeight: FontWeight.bold)),
-                              ...languageRecommendedTitles.map((title) => Text("• $title")),
+                              const Text("🌐 Recommended by Language:",
+                                  style:
+                                  TextStyle(fontWeight: FontWeight.bold)),
+                              ...List.generate(languageRecommendedTitles.length,
+                                      (i) {
+                                    final id = languageRecommendedIds[i];
+                                    final title = languageRecommendedTitles[i];
+                                    return Row(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(child: Text("• $title")),
+                                        IconButton(
+                                          icon: const Icon(Icons.playlist_add),
+                                          tooltip: 'Add to Watchlist',
+                                          onPressed: () {
+                                            setState(() => watchlist.add(id));
+                                            saveWatchlist();
+                                            showSnackBar(
+                                                "Added '$title' to Watchlist");
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.thumb_up),
+                                          tooltip: 'Like',
+                                          onPressed: () {
+                                            setState(() => likedlist.add(id));
+                                            saveWatchlist();
+                                            showSnackBar(
+                                                "Added '$title' to Liked Movies");
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  }),
                             ]
                           ],
                         ),
