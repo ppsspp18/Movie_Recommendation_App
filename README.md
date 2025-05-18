@@ -13,10 +13,14 @@ This project is a **Movie Recommendation System** built using **Python** for bac
   - **Cosine Similarity** for similarity computation between movies.
 - Generates:
   - **Top 10 similar movie recommendations** for each movie.
-  - **Top 10 recommendations by language**.
+  - **Top 10 similar movie recommendations by language** for each movie.
 - Output is stored in a structured **JSON file**, containing:
   - Movie title
-  - Top recommendations
+  - Movie overview
+  - Movie genre
+  - Movie language
+  - Top 10 recommendations
+  - Top 10 recommendations by language
 
 ### 📱 Frontend (Flutter)
 - Uses the JSON output from the Python backend.
@@ -24,7 +28,7 @@ This project is a **Movie Recommendation System** built using **Python** for bac
   - 🔎 **Search** movies by **title** or **genre**
   - ❤️ **Liked Movies** list
   - ⏳ **Watch Later** list
-  - 🧠 View personalized recommendations per movie
+  - 🧠 View content based recommendations per movie
 
 ---
 
@@ -34,16 +38,16 @@ This project is a **Movie Recommendation System** built using **Python** for bac
 movie_recommender/
 │
 ├── backend/
-│   ├── recommend.py            # TF-IDF and cosine similarity logic
-│   ├── generate_json.py        # Generates the final JSON with recommendations
-│   └── data/                   # Dataset files (CSV/JSON)
+│   ├── top10K-TMDB-movies.csv                       # Data used by the ml model 
+│   ├── Movie_recommendation_system.ipynb            # TF-IDF and cosine similarity logic and generate json file
+│   └── movies.json                                  # Generated json file                     
 │
 ├── frontend/ (Flutter App)
 │   ├── lib/
-│   │   ├── main.dart
-│   │   ├── screens/            # UI screens
-│   │   ├── models/             # Movie and recommendation models
-│   │   └── services/           # Data fetching and logic
+│   │   ├── main.dart             # Home screen
+│   │   ├── liked.dart            # Liked movies screen 
+│   │   ├── search.dart           # search screen 
+│   │   └── watchlist.dart        # watch later screen
 │   └── assets/
 │       └── movies.json         # JSON file with recommendations
 │
@@ -61,7 +65,7 @@ movie_recommender/
    ```
 2. Run the recommendation script:
    ```bash
-   python generate_json.py
+   movies_recommendation_system.ipynb
    ```
    This creates `movies.json` with recommendations.
 
@@ -93,7 +97,3 @@ movie_recommender/
 - Store liked/watchlist movies persistently (using Firebase or local DB)
 
 ---
-
-## 📄 License
-
-This project is open-source and available under the MIT License.
