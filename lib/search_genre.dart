@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 
-class Movie {
+class MovieG {
   final int id;
   final String title;
   final String overview;
@@ -12,7 +12,7 @@ class Movie {
   final List<int> recommendations;
   final List<int> languageRecommendations;
 
-  Movie({
+  MovieG({
     required this.id,
     required this.title,
     required this.overview,
@@ -22,7 +22,7 @@ class Movie {
     required this.languageRecommendations,
   });
 
-  factory Movie.fromJson(Map<String, dynamic> json) {
+  factory MovieG.fromJson(Map<String, dynamic> json) {
     List<int> extractIds(String prefix) {
       return List<int>.generate(10, (i) {
         final key = '$prefix${i + 1}';
@@ -30,7 +30,7 @@ class Movie {
       }).where((id) => id != -1).toList();
     }
 
-    return Movie(
+    return MovieG(
       id: (json['id'] as num).toInt(),
       title: json['title'],
       overview: json['overview'],
@@ -42,16 +42,16 @@ class Movie {
   }
 }
 
-class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+class SearchGenreScreen extends StatefulWidget {
+  const SearchGenreScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  State<SearchGenreScreen> createState() => _SearchGenreScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
-  late Future<List<Movie>> moviesFuture;
-  List<Movie> allMovies = [];
+class _SearchGenreScreenState extends State<SearchGenreScreen> {
+  late Future<List<MovieG>> moviesFuture;
+  List<MovieG> allMovies = [];
   String searchQuery = '';
   Set<int> expandedMovieIds = {};
   Set<int> watchlist = {};
@@ -96,11 +96,11 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Future<List<Movie>> loadMovies() async {
+  Future<List<MovieG>> loadMovies() async {
     final String response =
     await DefaultAssetBundle.of(context).loadString('assets/movies.json');
     final List<dynamic> data = json.decode(response);
-    final movies = data.map((json) => Movie.fromJson(json)).toList();
+    final movies = data.map((json) => MovieG.fromJson(json)).toList();
     allMovies = movies;
     return movies;
   }
@@ -109,7 +109,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return ids
         .map((id) => allMovies.firstWhere(
           (m) => m.id == id,
-      orElse: () => Movie(
+      orElse: () => MovieG(
         id: -1,
         title: 'Unknown',
         overview: '',
@@ -139,7 +139,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: TextField(
               onChanged: (query) => setState(() => searchQuery = query),
               decoration: InputDecoration(
-                labelText: 'Search by title',
+                labelText: 'Search by genre',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -148,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Movie>>(
+            child: FutureBuilder<List<MovieG>>(
               future: moviesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
@@ -162,12 +162,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 final filteredMovies = searchQuery.isEmpty
                     ? allMovies
                     : allMovies
-                    .where((movie) => movie.title
+                    .where((movie) => movie.genre
                     .toLowerCase()
                     .contains(searchQuery.toLowerCase()))
                     .toList();
 
+                filteredMovies.sort((a, b) => b.voteAverage.compareTo(a.voteAverage));
+
                 final displayedMovies = filteredMovies.take(50).toList();
+
 
                 if (displayedMovies.isEmpty) {
                   return const Center(child: Text('No movies found.'));
@@ -201,7 +204,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               const SizedBox(height: 8),
                               Text(movie.overview),
                               const SizedBox(height: 8),
-                              const Text("🔁 Movies recommended based on this movie:",
+                              const Text("🔁 Movies recommended based on this movie :",
                                   style:
                                   TextStyle(fontWeight: FontWeight.bold)),
                               ...List.generate(recommendedTitles.length, (i) {
@@ -236,7 +239,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 );
                               }),
                               const SizedBox(height: 6),
-                              const Text("🌐 Movies recommended by Language based on this movie:",
+                              const Text("🌐 Movies recommended by language based on this movie:",
                                   style:
                                   TextStyle(fontWeight: FontWeight.bold)),
                               ...List.generate(languageRecommendedTitles.length,

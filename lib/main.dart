@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:movie_recommender_app/search.dart';
 import 'package:movie_recommender_app/watchlist.dart';
 import 'package:movie_recommender_app/liked.dart';
+import 'package:movie_recommender_app/search_genre.dart';
 import 'dart:convert';
 
 void main() {
@@ -61,6 +62,19 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             SizedBox(height: 10),
             ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SearchGenreScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                  fixedSize: Size(50, 100)
+              ),
+              child: Text('Search by Genre', style: TextStyle(color: Colors.deepOrange)),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
               onPressed: () async{
                 final movies = await DefaultAssetBundle.of(context)
                     .loadString('assets/movies.json');
@@ -78,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
               style: ElevatedButton.styleFrom(
                   fixedSize: Size(50, 100)
               ),
-              child: Text('Watch Lists', style: TextStyle(color: Colors.deepOrange)),
+              child: Text('Watch Later Movies', style: TextStyle(color: Colors.deepOrange)),
             ),
             SizedBox(height: 10),
             ElevatedButton(
