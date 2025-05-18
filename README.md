@@ -97,3 +97,6 @@ movie_recommender/
 - Store liked/watchlist movies persistently (using Firebase or local DB)
 
 ---
+
+## Data Reference 
+- https://www.kaggle.com/datasets/ahsanaseer/top-rated-tmdb-movies-10k/code
