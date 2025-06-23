@@ -90,7 +90,7 @@ movie_recommender/
 
 ---
 
-## 📦 Future Improvements
+## Future Improvements
 
 - Add real-time API instead of static JSON
 - Implement user authentication and personalized profiles
