@@ -1,13 +1,13 @@
 
-# 🎬 Movie Recommendation System App
+# Movie Recommendation System App
 
 This project is a **Movie Recommendation System** built using **Python** for backend processing and **Flutter (Dart)** for the frontend mobile application. It provides personalized movie recommendations and an interactive app interface for users to manage their favorite and watchlist movies.
 
 ---
 
-## 💡 Features
+## Features
 
-### 🔍 Backend (Python)
+### Backend (Python)
 - Built a **movie recommendation system** using:
   - **TF-IDF Vectorization** for text-based feature extraction.
   - **Cosine Similarity** for similarity computation between movies.
@@ -22,17 +22,17 @@ This project is a **Movie Recommendation System** built using **Python** for bac
   - Top 10 recommendations
   - Top 10 recommendations by language
 
-### 📱 Frontend (Flutter)
+### Frontend (Flutter)
 - Uses the JSON output from the Python backend.
 - Provides the following features:
-  - 🔎 **Search** movies by **title** or **genre**
-  - ❤️ **Liked Movies** list
-  - ⏳ **Watch Later** list
-  - 🧠 View content based recommendations per movie
+  -  **Search** movies by **title** or **genre**
+  -  **Liked Movies** list
+  -  **Watch Later** list
+  -  View content based recommendations per movie
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 movie_recommender/
@@ -56,7 +56,7 @@ movie_recommender/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Backend (Python)
 1. Install dependencies:
